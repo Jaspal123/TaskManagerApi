@@ -1,20 +1,57 @@
 const express = require('express');
 const router = express.Router();
+const auth = require('../middleware/auth');
+const { check, validationResult } = require('express-validator');
+
+// User Model
+const User = require('../models/User');
+const Task = require('../models/Task');
 
 //@route  GET /api/tasks
 //@desc   Get all tasks of logged in user
 //@access Private
 
-router.get('/', (req,res) => {
-    res.send('Get all tasks of logged in user');
-})
+router.get("/", auth, async (req, res) => {
+    try {
+      const tasks = await Task.find({ user: req.user.id }).sort({
+        date: -1
+      });
+      res.json(tasks);
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send("Server Error");
+    }
+  });
 
 //@route  Post /api/taks
 //@desc   Add new task
-//@access Public
+//@access Private
 
-router.post('/', (req,res) => {
-    res.send('Add a new task')
+router.post('/', [auth, [
+    check('title', 'please enter a task to do').not().isEmpty()
+]], async (req,res) => {
+        
+    //Find validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const {title, deadline} = req.body;
+
+    try {
+        const newTask = new Task({
+            title,
+            deadline,
+            user: req.user.id
+        }) 
+        const contact = await newTask.save()
+        res.json(contact)   
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error')
+    }
+
 })
 
 
@@ -22,8 +59,32 @@ router.post('/', (req,res) => {
 //@desc   update a task
 //@access Private
 
-router.put('/:id', (req,res) => {
-    res.send('Update a task')
+router.put('/:id', auth, async (req,res) => {
+    const {title, deadline} = req.body;
+
+    //Build task object
+    const taskFields = {};
+    if(title) taskFields.title = title
+    if(deadline) taskFields.deadline = deadline
+
+    try {
+        let task = await Task.findById(req.params.id);
+
+        if(!task) return res.status(404).json({msg: 'Task not found'})
+
+        // Make sure the user owns the task
+        if(task.user.toString() !== req.user.id)
+        {
+            return res.status(401).json({msg: "Not Autorized"})
+        }
+
+        task = await Task.findByIdAndUpdate(req.params.id, {$set: taskFields}, {new: true})
+        res.json(task)
+
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error')
+    }
 })
 
 
@@ -31,8 +92,25 @@ router.put('/:id', (req,res) => {
 //@desc   Delete a task
 //@access Private
 
-router.delete('/:id', (req,res) => {
-    res.send('Delete a task')
+router.delete('/:id', auth, async (req,res) => {
+    try {
+        let task = await Task.findById(req.params.id);
+
+        if(!task) return res.status(404).json({msg: 'Task not found'})
+
+        // Make sure the user owns the task
+        if(task.user.toString() !== req.user.id)
+        {
+            return res.status(401).json({msg: "Not Autorized"})
+        }
+
+
+        await Task.findByIdAndRemove(req.params.id)
+        res.json({msg: 'Task Removed'})
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error')
+    }
 })
 
 module.exports = router;

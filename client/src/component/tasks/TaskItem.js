@@ -4,12 +4,13 @@ import TaskContext from '../../context/task/taskContext';
 const TaskItem = ({task}) => {
   const taskContext = useContext(TaskContext)
 
-  const {deleteTask} = taskContext
+  const {deleteTask, setCurrent, clearCurrent} = taskContext
 
   const {id,title,deadline,status} = task;
 
   const onDelete = () => {
     deleteTask(id)
+    clearCurrent();
   }
 
     return (
@@ -37,7 +38,7 @@ const TaskItem = ({task}) => {
                 )}
             </ul>
             <p>
-                <button className="btn btn-dark btn-sm">Edit</button>
+                <button className="btn btn-dark btn-sm" onClick={() => setCurrent(task)}>Edit</button>
                 <button className="btn btn-danger btn-sm" onClick={onDelete}>Delete</button>
             </p>
         </div>

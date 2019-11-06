@@ -3,10 +3,12 @@ import {BrowserRouter as Router, Route, Switch} from 'react-router-dom';
 import Navbar from './component/layout/Navbar';
 import Home from './component/pages/Home';
 import About from './component/pages/About';
+import TaskState from "./context/task/TaskState";
 import './App.css';
 
 function App() {
   return (
+    <TaskState>
     <Router>
     <Fragment>
       <Navbar />
@@ -18,7 +20,7 @@ function App() {
       </div>
     </Fragment>
   </Router>    
-
+  </TaskState>
   );
 }
 

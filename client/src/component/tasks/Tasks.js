@@ -7,7 +7,7 @@ const Tasks = () => {
     const {tasks} = taskContext
     return (
         <Fragment>
-            {tasks.map(task => <TaskItem task={task} id={task.id}/>)}
+            {tasks.map(task => <TaskItem task={task} key={task.id}/>)}
         </Fragment>
     )
 }

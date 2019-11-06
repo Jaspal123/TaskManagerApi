@@ -1,4 +1,5 @@
 import React,{useReducer} from 'react';
+import uuid from 'uuid';
 import TaskContext from './taskContext'
 import taskReducer from './taskReducer'
 import {
@@ -37,8 +38,14 @@ const TaskState = props => {
     const [state, dispatch] = useReducer(taskReducer, initialState);
 
     // Add Task
-
+    const addTask = task => {
+        task.id = uuid.v4();
+        dispatch({type: ADD_TASK, payload: task})
+    }
     // Delete Task
+    const deleteTask = (id) => {
+        dispatch({type: DELETE_TASK, payload: id})
+    }
 
     // Set Current Task
 
@@ -52,7 +59,9 @@ const TaskState = props => {
 
     return (
         <TaskContext.Provider value={{
-            tasks: state.tasks
+            tasks: state.tasks,
+            addTask,
+            deleteTask
         }}>{props.children}</TaskContext.Provider>
     )
 }
